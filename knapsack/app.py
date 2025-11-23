@@ -1,13 +1,7 @@
-from enum import Enum, auto
-class ProblemType (Enum):
-    BOUNDED = auto()
-    UNBOUNDED = auto()
-class Knapsack:
-    def __init__(self, capacity: int, problemType: ProblemType):
-        if capacity <= 0:
-            raise ValueError("The Knapsack Capacity must be a positive integer")
-        self.capacity = capacity
-        self.problemType = problemType
+from knapsack import Knapsack
 
-    def clear_sack(self) -> None:
-        self.items.clear()
+weights = list(map(int, input("Enter the Weights Seprated by spaces ").split(" ")))
+values = list(map(int, input("Enter the Values Seprated by spaces ").split(" ")))
+
+while len(values) != len(weights):
+    values = list(map(int, input("Please enter the same number of values as waits ").split(" ")))
