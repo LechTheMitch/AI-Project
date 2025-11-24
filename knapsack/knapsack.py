@@ -20,7 +20,13 @@ class Knapsack:
         self.values = np.array(values)
         self.best_solution = None #Elitism
         self.best_fitness = 0
-        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), np.array([self.calculate_maxitem(weight) for weight in self.weights])]
+
+        if self.problem_type == ProblemType.BOUNDED:
+            self.max_quantities = np.where(self.weights > self.capacity, 0, 1)
+        else:
+            self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights])
+
+        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), self.max_counts.copy()]
 
     def create_population(self):
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
@@ -39,22 +45,20 @@ class Knapsack:
         fitness = np.where(total_weight <= self.capacity, total_value, 0)
         return fitness, total_weight
     
-    # def update_belief_space(self, population, fitness):
-    #     current_best_idx = np.argmax(fitness)
-    #     if fitness[current_best_idx] > self.best_fitness:
-    #         self.best_fitness = fitness[current_best_idx]
-    #         self.best_solution = population[current_best_idx].copy()
+    def update_belief_space(self, population, fitness):
+        current_best_index = np.argmax(fitness)
+        if fitness[current_best_index] > self.best_fitness:
+            self.best_fitness = fitness[current_best_index]
+            self.best_solution = population[current_best_index].copy()
 
-    #     # 2. Update Normative Knowledge (Acceptable Ranges)
-    #     # We take the top 20% of the population to define "good" ranges
-    #     top_percentile_idx = np.argsort(fitness)[-int(self.pop_size * 0.2):]
-    #     top_performers = population[top_percentile_idx]
+        top_percentile_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):]
+        top_performers = population[top_percentile_index]
         
-    #     self.normative_bounds[0] = np.min(top_performers, axis=0)
-    #     self.normative_bounds[1] = np.max(top_performers, axis=0)
+        self.normative_bounds[0] = np.min(top_performers, axis=0)
+        self.normative_bounds[1] = np.max(top_performers, axis=0)
 
     def mutate(self, individual):
-        for i in range(self.n_items):
+        for i in range(self.num_of_items):
             if np.random.rand() < self.MUTATION_RATE:
                 low = int(self.normative_bounds[0][i])
                 high = int(self.normative_bounds[1][i])
@@ -64,6 +68,10 @@ class Knapsack:
                 else:
                     individual[i] = low
         return individual
+    
+    def solveKnapsack():
+        #TODO with GUI
+        pass
     
     def test_print(self, weight): # TODO needs to be removed later
         self.current_population = self.create_population()
