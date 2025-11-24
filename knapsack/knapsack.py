@@ -26,7 +26,7 @@ class Knapsack:
         else:
             self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights])
 
-        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), self.max_counts.copy()]
+        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()]
 
     def create_population(self):
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
