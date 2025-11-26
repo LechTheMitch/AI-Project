@@ -1,4 +1,5 @@
 from knapsack import Knapsack as K, ProblemType
+import numpy as np
 
 def get_knapvalues(itemname: str):
     while True:
@@ -14,16 +15,21 @@ def get_knapvalues(itemname: str):
         except ValueError:
             print(f"{itemname} must be positive integers")
 
-capacity = int(input("Please enter the Sack's capacity "))
-weights = get_knapvalues("Weights")
+# capacity = int(input("Please enter the Sack's capacity "))
+# weights = get_knapvalues("Weights")
 
-while True:
-    values = get_knapvalues("Values")
+# while True:
+#     values = get_knapvalues("Values")
     
-    if len(weights) == len(values):
-        break
+#     if len(weights) == len(values):
+#         break
 
-    print("There must be as many values as there are weights")
+#     print("There must be as many values as there are weights")
 
-s = K(ProblemType.BOUNDED, capacity, weights, values)
+capacity = 60
+
+weights = [3, 2, 8, 3]
+values = [10, 20, 15, 9]
+
+s = K(ProblemType.UNBOUNDED, capacity, weights, values)
 s.test_print(weights[0])

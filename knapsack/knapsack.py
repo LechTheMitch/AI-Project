@@ -5,6 +5,10 @@ class ProblemType (Enum):
     BOUNDED = auto()
     UNBOUNDED = auto()
 
+class Bounds (Enum):
+    LOWER_BOUND = 0
+    UPPER_BOUND = 1
+
 class Knapsack:
     POP_SIZE = 100
     MUTATION_RATE = 0.1
@@ -22,15 +26,15 @@ class Knapsack:
         self.best_fitness = 0
 
         if self.problem_type == ProblemType.BOUNDED:
-            self.max_quantities = np.where(self.weights > self.capacity, 0, 1)
+            self.max_quantities = np.where(self.weights > self.capacity, 0, 1) # Checks whether the weights are greater than the capacity and if they are set them to 0 otherwise 1
         else:
             self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights])
 
-        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()]
+        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()] # 
 
     def create_population(self):
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
-        itemcounts = random_percentages * (self.normative_bounds[1] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
+        itemcounts = random_percentages * (self.normative_bounds[Bounds.UPPER_BOUND] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
         return np.array(itemcounts).astype(int) #The acutal number of items we could have inside the sack
 
     def clear_sack(self) -> None:
@@ -45,23 +49,24 @@ class Knapsack:
         fitness = np.where(total_weight <= self.capacity, total_value, 0)
         return fitness, total_weight
     
-    def update_belief_space(self, population, fitness):
+    def update_belief_space(self, population, fitness): # TODO Implement Crossover which I forgot
         current_best_index = np.argmax(fitness)
         if fitness[current_best_index] > self.best_fitness:
             self.best_fitness = fitness[current_best_index]
             self.best_solution = population[current_best_index].copy()
 
-        top_percentile_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):]
-        top_performers = population[top_percentile_index]
+        # Check if viable Add a condition to prevent fitness = 0 from entering the top performers index
+        top_performers_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):] # TODO Try to find a way to make it descending
+        top_performers = population[top_performers_index]
         
-        self.normative_bounds[0] = np.min(top_performers, axis=0)
-        self.normative_bounds[1] = np.max(top_performers, axis=0)
+        self.normative_bounds[Bounds.LOWER_BOUND] = np.min(top_performers, axis=0)
+        self.normative_bounds[Bounds.UPPER_BOUND] = np.max(top_performers, axis=0)
 
     def mutate(self, individual):
         for i in range(self.num_of_items):
             if np.random.rand() < self.MUTATION_RATE:
-                low = int(self.normative_bounds[0][i])
-                high = int(self.normative_bounds[1][i])
+                low = int(self.normative_bounds[Bounds.LOWER_BOUND][i])
+                high = int(self.normative_bounds[Bounds.UPPER_BOUND][i])
                 
                 if low < high:
                     individual[i] = np.random.randint(low, high + 1)
@@ -75,5 +80,5 @@ class Knapsack:
     
     def test_print(self, weight): # TODO needs to be removed later
         self.current_population = self.create_population()
-        print(self.calculate_fitness(self.current_population))
+        print(self.calculate_fitness(self.create_population()))
 
