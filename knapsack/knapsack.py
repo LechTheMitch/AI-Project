@@ -43,6 +43,8 @@ class Knapsack:
         self.belief_space.clear()
         self.best_solution = None
         self.best_fitness = 0
+        print("Clear Ran") # For testing will be removed later
+        print(self.capacity)
 
     def calculate_maxitem(self, weight) -> int: # only relevant for unbounded
         return self.capacity // weight
