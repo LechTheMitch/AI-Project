@@ -33,13 +33,16 @@ class Knapsack:
 
         self.belief_space = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()] # 
 
-    def create_population(self):
+    def create_population(self): #Basically our Genotype (The way we encode the data that the algorithm handles) which is Integer in our case Phenotype always represents reality (Knapsack with actual physical items)
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
         itemcounts = random_percentages * (self.belief_space[Bounds.UPPER_BOUND.value] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
         return np.array(itemcounts).astype(int) #The acutal number of items we could have inside the sack
 
-    def clear_sack(self) -> None:
+    def clear_sack(self) -> None: # TODO Implement this in a better way by killing the current instance and creating a new one
         self.current_population.clear()
+        self.belief_space.clear()
+        self.best_solution = None
+        self.best_fitness = 0
 
     def calculate_maxitem(self, weight) -> int: # only relevant for unbounded
         return self.capacity // weight
