@@ -12,6 +12,7 @@ class Bounds (Enum):
 class Knapsack:
     POP_SIZE = 100
     MUTATION_RATE = 0.1
+    GENERATIONS = 200
 
     def __init__(self, problem_type: ProblemType, capacity: int, weights, values): # Weights and Values need Type Checking
         if capacity <= 0:
@@ -30,11 +31,11 @@ class Knapsack:
         else:
             self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights])
 
-        self.normative_bounds = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()] # 
+        self.belief_space = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()] # 
 
     def create_population(self):
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
-        itemcounts = random_percentages * (self.normative_bounds[Bounds.UPPER_BOUND] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
+        itemcounts = random_percentages * (self.belief_space[Bounds.UPPER_BOUND.value] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
         return np.array(itemcounts).astype(int) #The acutal number of items we could have inside the sack
 
     def clear_sack(self) -> None:
@@ -47,7 +48,7 @@ class Knapsack:
         total_weight = np.dot(population, self.weights)
         total_value = np.dot(population, self.values)
         fitness = np.where(total_weight <= self.capacity, total_value, 0)
-        return fitness, total_weight
+        return fitness
     
     def update_belief_space(self, population, fitness): # TODO Implement Crossover which I forgot
         current_best_index = np.argmax(fitness)
@@ -55,18 +56,41 @@ class Knapsack:
             self.best_fitness = fitness[current_best_index]
             self.best_solution = population[current_best_index].copy()
 
-        # Check if viable Add a condition to prevent fitness = 0 from entering the top performers index
+        # TODO Check if viable Add a condition to prevent fitness = 0 from entering the top performers index
         top_performers_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):] # TODO Try to find a way to make it descending
         top_performers = population[top_performers_index]
+
         
-        self.normative_bounds[Bounds.LOWER_BOUND] = np.min(top_performers, axis=0)
-        self.normative_bounds[Bounds.UPPER_BOUND] = np.max(top_performers, axis=0)
+        self.belief_space[Bounds.LOWER_BOUND.value] = np.min(top_performers, axis=0)
+        self.belief_space[Bounds.UPPER_BOUND.value] = np.max(top_performers, axis=0)
+
+        return top_performers #For use in crossover
+
+    def crossover(self, parents): # Single point Crossover
+        children = []
+        numOfChildren = self.POP_SIZE // 2
+        for index in range(numOfChildren):
+            #To lessen confusion we will use expansion, just like the spread operator in js (...)
+            parent1_index, parent2_index = np.random.choice(len(parents), size=2, replace=False) # The size parameter being 2 means that function returns only two random parents 
+            #and the replace being false means that the same parent cannot be selected multiple times as it doesn't make sense as it wpuld just produce itself again
+            
+            parent1 = parents[parent1_index]
+            parent2 = parents[parent2_index]
+
+            crossover_point = np.random.randint(1, self.num_of_items)
+            child = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
+            #TODO Look into Uniform Crossover
+            children.append(child)
+            child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
+            children.append(child2)
+
+        return np.array(children)
 
     def mutate(self, individual):
         for i in range(self.num_of_items):
             if np.random.rand() < self.MUTATION_RATE:
-                low = int(self.normative_bounds[Bounds.LOWER_BOUND][i])
-                high = int(self.normative_bounds[Bounds.UPPER_BOUND][i])
+                low = int(self.belief_space[Bounds.LOWER_BOUND.value][i])
+                high = int(self.belief_space[Bounds.UPPER_BOUND.value][i])
                 
                 if low < high:
                     individual[i] = np.random.randint(low, high + 1)
@@ -74,11 +98,43 @@ class Knapsack:
                     individual[i] = low
         return individual
     
-    def solveKnapsack():
+    def solveKnapsack(self):
         #TODO with GUI
-        pass
+        population = self.create_population()
+
+        for generation in range(self.GENERATIONS):
+            fitness = self.calculate_fitness(population)
+            parents = self.update_belief_space(population, fitness)
+            next_gen = self.crossover(parents)
+            population = self.mutate(next_gen)
+            
+            if generation % 50 == 0:
+                print(f"Gen {generation}: Best Value = {self.best_fitness}")
+
+        print(f"Best Value: {self.best_fitness}")
+        print(f"Knapsack Arrangement: {self.best_solution}")
+        return self.best_solution, self.best_fitness
+    
+    #TODO to be removed
+    # def solve(self):
+    #     population = self.create_population()
+        
+    #     print(f"Starting Evolution over {self.GENERATIONS} generations...")
+
+    #     for generation in range(self.GENERATIONS):
+    #         fitness = self.calculate_fitness(population)
+    #         parents = self.update_belief_space(population, fitness)
+    #         next_gen = self.crossover(parents)
+    #         population = self.mutate(next_gen)
+            
+    #         if generation % 50 == 0:
+    #             print(f"Gen {generation}: Best Value = {self.best_fitness}")
+
+    #     print(f"Best Value: {self.best_fitness}")
+    #     print(f"Knapsack Arrangement: {self.best_solution}")
+    #     return self.best_solution, self.best_fitness
     
     def test_print(self, weight): # TODO needs to be removed later
         self.current_population = self.create_population()
-        print(self.calculate_fitness(self.create_population()))
+        print(self.update_belief_space(self.create_population(), self.calculate_fitness(self.create_population())))
 

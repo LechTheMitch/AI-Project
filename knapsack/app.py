@@ -32,4 +32,4 @@ weights = [3, 2, 8, 3]
 values = [10, 20, 15, 9]
 
 s = K(ProblemType.UNBOUNDED, capacity, weights, values)
-s.test_print(weights[0])
+s.solveKnapsack()
