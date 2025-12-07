@@ -50,21 +50,23 @@ class Knapsack:
         fitness = np.where(total_weight <= self.capacity, total_value, 0)
         return fitness
     
-    def update_belief_space(self, population, fitness): # TODO Implement Crossover which I forgot
+    def update_belief_space(self, population, fitness):
         current_best_index = np.argmax(fitness)
         if fitness[current_best_index] > self.best_fitness:
             self.best_fitness = fitness[current_best_index]
             self.best_solution = population[current_best_index].copy()
 
-        # TODO Check if viable Add a condition to prevent fitness = 0 from entering the top performers index
-        top_performers_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):] # TODO Try to find a way to make it descending
+        #TODO Try to find a way to make it descending
+        top_performers_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):] # Negative index means count from the end A Python Princaple
         top_performers = population[top_performers_index]
-
+        # The following lines are to fix the issue that we discussed in the meeting about having items with fitness = 0 influence the belief space
+        top_performers_values = fitness[top_performers_index]
+        valid_fitnesses = top_performers[top_performers_values > 0]
         
-        self.belief_space[Bounds.LOWER_BOUND.value] = np.min(top_performers, axis=0)
-        self.belief_space[Bounds.UPPER_BOUND.value] = np.max(top_performers, axis=0)
+        self.belief_space[Bounds.LOWER_BOUND.value] = np.min(valid_fitnesses, axis=0)
+        self.belief_space[Bounds.UPPER_BOUND.value] = np.max(valid_fitnesses, axis=0)
 
-        return top_performers #For use in crossover
+        return valid_fitnesses #For use in crossover
 
     def crossover(self, parents): # Single point Crossover
         children = []
@@ -99,7 +101,6 @@ class Knapsack:
         return individual
     
     def solveKnapsack(self):
-        #TODO with GUI
         population = self.create_population()
 
         for generation in range(self.GENERATIONS):
@@ -114,25 +115,6 @@ class Knapsack:
         print(f"Best Value: {self.best_fitness}")
         print(f"Knapsack Arrangement: {self.best_solution}")
         return self.best_solution, self.best_fitness
-    
-    #TODO to be removed
-    # def solve(self):
-    #     population = self.create_population()
-        
-    #     print(f"Starting Evolution over {self.GENERATIONS} generations...")
-
-    #     for generation in range(self.GENERATIONS):
-    #         fitness = self.calculate_fitness(population)
-    #         parents = self.update_belief_space(population, fitness)
-    #         next_gen = self.crossover(parents)
-    #         population = self.mutate(next_gen)
-            
-    #         if generation % 50 == 0:
-    #             print(f"Gen {generation}: Best Value = {self.best_fitness}")
-
-    #     print(f"Best Value: {self.best_fitness}")
-    #     print(f"Knapsack Arrangement: {self.best_solution}")
-    #     return self.best_solution, self.best_fitness
     
     def test_print(self, weight): # TODO needs to be removed later
         self.current_population = self.create_population()
