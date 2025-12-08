@@ -1,37 +1,7 @@
 from knapsack import Knapsack as K, ProblemType
 import customtkinter as ctk
 
-def get_knapvalues(itemname: str):
-    while True:
-        try:
-            knapvalues = list(map(int, input(f"Enter the {itemname} Seprated by spaces ").split()))
 
-            if any(knapvalue <= 0 for knapvalue in knapvalues):
-                print(f"All {itemname.lower()} must be positive integers")
-                continue
-        
-            return knapvalues
-
-        except ValueError:
-            print(f"{itemname} must be positive integers")
-
-# capacity = int(input("Please enter the Sack's capacity "))
-# weights = get_knapvalues("Weights")
-
-# while True:
-#     values = get_knapvalues("Values")
-    
-#     if len(weights) == len(values):
-#         break
-
-#     print("There must be as many values as there are weights")
-
-# capacity = 60
-
-# weights = [3, 2, 8, 3]
-# values = [10, 20, 15, 9]
-
-#s = K(ProblemType.UNBOUNDED, capacity, weights, values)
 
 def process_values():
     try:
@@ -39,29 +9,31 @@ def process_values():
         weights = [int(x.strip()) for x in weight_field.get().split()] 
         # Square brackets make python wait for the expression to finish executing before evaluating the expression
         values = [int(x.strip()) for x in value_field.get().split()]
+        print(values)
         problem_type_raw = radio_var.get() # Needs converting to the enum we are using
 
         #TODO input validation
 
         problem_type = ProblemType.BOUNDED if problem_type_raw == "BOUNDED" else ProblemType.UNBOUNDED
 
-        def run_solver():# Stolen Code
+        # TODO run solver function needs to be rewritten
+        def run_solver():
                     knapsack = K(problem_type, capacity, weights, values)
                     solution, best_value = knapsack.solveKnapsack()
-                    
+
                     result_text = f"Best Value: {best_value}\n\n"
                     result_text += "Item Quantities:\n"
-                    for i, qty in enumerate(solution):
+                    for item, qty in enumerate(solution): # enumarate returns the index and the value as a Tuple
+                        #ie: if index 0 has value 5 enumerate returns the index and the value too unlike range
                         if qty > 0:
-                            result_text += f"  Item {i}: {qty} copies (Weight: {weights[i]}, Value: {values[i]})\n"
+                            result_text += f"  Item {item+1}: {qty} copies (Weight: {weights[item]}, Value: {values[item]})\n"
                     
                     total_weight = sum(solution * knapsack.weights)
-                    result_text += f"\nTotal Weight: {total_weight}/{capacity}\n"
-                    result_text += f"Remaining Capacity: {capacity - total_weight}\n"
+                    result_text += f"\nWeight Used: {total_weight}/{capacity}\n"
                     
-                    results_text.delete("1.0", "end")
-                    results_text.insert("1.0", result_text)
+                    results_text.configure(text=result_text)
                     solve_button.configure(state="normal")
+        run_solver()
     except:
         pass
 
@@ -105,20 +77,14 @@ bounded_button.grid(row = 3, column = 1, padx=10, pady=10)
 unbounded_button = ctk.CTkRadioButton(input_frame, text="Unbounded", value="UNBOUNDED", variable=radio_var)
 unbounded_button.grid(row = 3, column = 2, padx=10, pady=10, sticky="w")
 
+# TODO Impove the way results are shown
 # Results
-results_frame = ctk.CTkFrame(mainWindow)
-results_frame.pack(pady=10, padx=20, fill="both", expand=True)
 
-ctk.CTkLabel(results_frame, text="Results:").pack(pady=10)
-
-results_text = ctk.CTkTextbox(results_frame, width=700, height=250, font=("Courier", 12))
-results_text.pack(pady=10, padx=10, fill="both", expand=True)
+results_text = ctk.CTkLabel(mainWindow, text="")
+results_text.pack(pady=10, padx=10)
 
 # The Buttons
 solve_button = ctk.CTkButton(mainWindow, text="Solve", command=process_values) # Putting the function call brackets immediately calls it which leads to program breaking behaviour 
 solve_button.pack(padx=20, pady=20)
-
-clear_button = ctk.CTkButton(mainWindow, text="Clear", command=lambda: print([int(x.strip()) for x in weight_field.get().split()] )) # Putting the function call brackets immediately calls it which leads to program breaking behaviour 
-clear_button.pack(padx=20, pady=20)
 
 mainWindow.mainloop()

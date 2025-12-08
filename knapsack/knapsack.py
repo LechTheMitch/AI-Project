@@ -38,14 +38,6 @@ class Knapsack:
         itemcounts = random_percentages * (self.belief_space[Bounds.UPPER_BOUND.value] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
         return np.array(itemcounts).astype(int) #The acutal number of items we could have inside the sack
 
-    def clear_sack(self) -> None: # TODO Implement this in a better way by killing the current instance and creating a new one
-        self.current_population.clear()
-        self.belief_space.clear()
-        self.best_solution = None
-        self.best_fitness = 0
-        print("Clear Ran") # For testing will be removed later
-        print(self.capacity)
-
     def calculate_maxitem(self, weight) -> int: # only relevant for unbounded
         return self.capacity // weight
     
@@ -57,6 +49,7 @@ class Knapsack:
     
     def update_belief_space(self, population, fitness):
         current_best_index = np.argmax(fitness)
+        #print(fitness) # For Debugging TODO remove
         if fitness[current_best_index] > self.best_fitness:
             self.best_fitness = fitness[current_best_index]
             self.best_solution = population[current_best_index].copy()
@@ -75,8 +68,10 @@ class Knapsack:
 
     def crossover(self, parents): # Single point Crossover
         children = []
-        numOfChildren = self.POP_SIZE // 2
-        for index in range(numOfChildren):
+        if self.best_solution is not None: # to not lose the elite
+            children.append(self.best_solution.copy())
+
+        while len(children) < self.POP_SIZE:
             #To lessen confusion we will use expansion, just like the spread operator in js (...)
             parent1_index, parent2_index = np.random.choice(len(parents), size=2, replace=False) # The size parameter being 2 means that function returns only two random parents 
             #and the replace being false means that the same parent cannot be selected multiple times as it doesn't make sense as it wpuld just produce itself again
@@ -86,15 +81,16 @@ class Knapsack:
 
             crossover_point = np.random.randint(1, self.num_of_items)
             child = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
-            #TODO Look into Uniform Crossover
             children.append(child)
-            child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
-            children.append(child2)
+            #TODO Look into Uniform Crossover
+            if len(children) < self.POP_SIZE:
+                child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
+                children.append(child2)
 
         return np.array(children)
 
-    def mutate(self, individual):
-        for i in range(self.num_of_items):
+    def mutate(self, individual): # Never send an array to this unless you want abominations 
+        for i in range(self.num_of_items): # We loop on the no. of items as it's the size of the array
             if np.random.rand() < self.MUTATION_RATE:
                 low = int(self.belief_space[Bounds.LOWER_BOUND.value][i])
                 high = int(self.belief_space[Bounds.UPPER_BOUND.value][i])
@@ -112,9 +108,15 @@ class Knapsack:
             fitness = self.calculate_fitness(population)
             parents = self.update_belief_space(population, fitness)
             next_gen = self.crossover(parents)
-            population = self.mutate(next_gen)
             
-            if generation % 50 == 0:
+            start_index = 1 if self.best_solution is not None else 0 #To prevent our Elite dude from dying basically
+            #Looping through thr population to mutate them helppp
+            for i in range(start_index, len(next_gen)):
+                next_gen[i] = self.mutate(next_gen[i])
+
+            population = next_gen
+            
+            if generation % 50 == 0: # For analysis will be removedf
                 print(f"Gen {generation}: Best Value = {self.best_fitness}")
 
         print(f"Best Value: {self.best_fitness}")
