@@ -71,7 +71,7 @@ class Knapsack:
         if self.best_solution is not None: # to not lose the elite
             children.append(self.best_solution.copy())
 
-        while len(children) < self.POP_SIZE:
+        while len(children) < self.POP_SIZE:# For every 2 parents 2 children are produced
             #To lessen confusion we will use expansion, just like the spread operator in js (...)
             parent1_index, parent2_index = np.random.choice(len(parents), size=2, replace=False) # The size parameter being 2 means that function returns only two random parents 
             #and the replace being false means that the same parent cannot be selected multiple times as it doesn't make sense as it wpuld just produce itself again
