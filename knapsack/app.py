@@ -43,8 +43,8 @@ def process_values():
         # Create Solver Instance
         knapsack = K(problem_type, capacity, weights, values)
         
-        # Use the Generator method (Ensure solveKnapsackGenerator exists in knapsack.py)
-        solver_gen = knapsack.solveKnapsackGenerator()
+        # Use the Generator method (Ensure solveKnapsack exists in knapsack.py)
+        solver_gen = knapsack.solveKnapsack()
         
         solve_button.configure(state="disabled")
 

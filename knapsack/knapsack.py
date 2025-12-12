@@ -31,7 +31,7 @@ class Knapsack:
         else:
             self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights])
 
-        self.belief_space = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()] # 
+        self.belief_space = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()]
 
     def create_population(self): #Basically our Genotype (The way we encode the data that the algorithm handles) which is Integer in our case Phenotype always represents reality (Knapsack with actual physical items)
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
@@ -49,7 +49,7 @@ class Knapsack:
         return population
 
     def calculate_maxitem(self, weight) -> int: # only relevant for unbounded
-        return self.capacity // weight
+        return self.capacity // weight # // = floor
     
     def calculate_fitness(self, population):
         total_weight = np.dot(population, self.weights)
@@ -59,14 +59,14 @@ class Knapsack:
     
     def update_belief_space(self, population, fitness):
         current_best_index = np.argmax(fitness)
-        #print(fitness) # For Debugging TODO remove
+
         if fitness[current_best_index] > self.best_fitness:
             self.best_fitness = fitness[current_best_index]
             self.best_solution = population[current_best_index].copy()
 
         #TODO Try to find a way to make it descending
         top_performers_index = np.argsort(fitness)[-int(self.POP_SIZE * 0.2):] # Negative index means count from the end A Python Princaple
-        top_performers = population[top_performers_index]
+        top_performers = population[top_performers_index] # Will contain the best 20%
         # The following lines are to fix the issue that we discussed in the meeting about having items with fitness = 0 influence the belief space
         top_performers_values = fitness[top_performers_index]
         valid_solutions = top_performers[top_performers_values > 0]
@@ -93,18 +93,17 @@ class Knapsack:
             parent2 = parents[parent2_index]
 
             crossover_point = np.random.randint(1, self.num_of_items)
-            child = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
-            children.append(child)
-            #TODO Look into Uniform Crossover
-            if len(children) < self.POP_SIZE:
-                child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
-                children.append(child2)
+            child1 = np.concatenate([parent1[:crossover_point], parent2[crossover_point:]])
+            children.append(child1)
+
+            child2 = np.concatenate([parent2[:crossover_point], parent1[crossover_point:]])
+            children.append(child2)
 
         return np.array(children)
 
     def mutate(self, individual): # Never send an array to this unless you want abominations 
         for i in range(self.num_of_items): # We loop on the no. of items as it's the size of the array
-            if np.random.rand() < self.MUTATION_RATE:
+            if np.random.rand() <= self.MUTATION_RATE:
                 low = int(self.belief_space[Bounds.LOWER_BOUND.value][i])
                 high = int(self.belief_space[Bounds.UPPER_BOUND.value][i])
                 
@@ -131,6 +130,10 @@ class Knapsack:
             
             if generation % 50 == 0: # For analysis will be removedf
                 print(f"Gen {generation}: Best Value = {self.best_fitness}")
+
+            #PLOT STUFF
+            avg_fitness = np.mean(fitness)
+            yield generation, self.best_fitness, avg_fitness
 
         print(f"Best Value: {self.best_fitness}")
         print(f"Knapsack Arrangement: {self.best_solution}")
