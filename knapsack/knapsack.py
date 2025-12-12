@@ -136,7 +136,24 @@ class Knapsack:
         print(f"Knapsack Arrangement: {self.best_solution}")
         return self.best_solution, self.best_fitness
     
-    def test_print(self, weight): # TODO needs to be removed later
-        self.current_population = self.create_population()
-        print(self.update_belief_space(self.create_population(), self.calculate_fitness(self.create_population())))
+    #For plots
+    def solveKnapsackGenerator(self):
+        population = self.create_population()
 
+        for generation in range(self.GENERATIONS):
+            fitness = self.calculate_fitness(population)
+            parents = self.update_belief_space(population, fitness)
+            next_gen = self.crossover(parents)
+            
+            start_index = 1 if self.best_solution is not None else 0
+            for i in range(start_index, len(next_gen)):
+                next_gen[i] = self.mutate(next_gen[i])
+
+            population = next_gen
+            
+            # Yield current state to the GUI
+            # We return: Generation Number, Current Best Fitness, Average Fitness (optional but good for plots)
+            avg_fitness = np.mean(fitness)
+            yield generation, self.best_fitness, avg_fitness
+
+        return self.best_solution, self.best_fitness
