@@ -1,6 +1,7 @@
 from enum import Enum, auto
 import numpy as np
 
+#Doha
 class ProblemType (Enum):
     BOUNDED = auto()
     UNBOUNDED = auto()
@@ -33,6 +34,7 @@ class Knapsack:
 
         self.belief_space = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()]
 
+    #Ahmed Mostafa
     def create_population(self): #Basically our Genotype (The way we encode the data that the algorithm handles) which is Integer in our case Phenotype always represents reality (Knapsack with actual physical items)
         random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
         #itemcounts is the random combination of items generated for use in the population
@@ -57,6 +59,7 @@ class Knapsack:
         fitness = np.where(total_weight <= self.capacity, total_value, 0)
         return fitness
     
+    #Khaled
     def update_belief_space(self, population, fitness):
         current_best_index = np.argmax(fitness)
 
@@ -78,7 +81,7 @@ class Knapsack:
         
         return top_performers
 
-
+    #Ahmed Nagah
     def crossover(self, parents): # Single point Crossover
         children = []
         if self.best_solution is not None: # to not lose the elite
@@ -113,6 +116,7 @@ class Knapsack:
                     individual[i] = low
         return individual
     
+    #Yousef
     def solveKnapsack(self):
         population = self.create_population()
 
@@ -137,26 +141,4 @@ class Knapsack:
 
         print(f"Best Value: {self.best_fitness}")
         print(f"Knapsack Arrangement: {self.best_solution}")
-        return self.best_solution, self.best_fitness
-    
-    #For plots
-    def solveKnapsackGenerator(self):
-        population = self.create_population()
-
-        for generation in range(self.GENERATIONS):
-            fitness = self.calculate_fitness(population)
-            parents = self.update_belief_space(population, fitness)
-            next_gen = self.crossover(parents)
-            
-            start_index = 1 if self.best_solution is not None else 0
-            for i in range(start_index, len(next_gen)):
-                next_gen[i] = self.mutate(next_gen[i])
-
-            population = next_gen
-            
-            # Yield current state to the GUI
-            # We return: Generation Number, Current Best Fitness, Average Fitness (optional but good for plots)
-            avg_fitness = np.mean(fitness)
-            yield generation, self.best_fitness, avg_fitness
-
         return self.best_solution, self.best_fitness
