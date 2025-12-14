@@ -157,11 +157,12 @@ solve_button = ctk.CTkButton(mainWindow, text="Solve", command=process_values) #
 solve_button.pack(padx=20, pady=20)
 
 #Plot Code
-plot_frame = ctk.CTkFrame(mainWindow, width=600, height=400)
+plot_frame = ctk.CTkFrame(mainWindow, width=600, height=400) # Container for the plot
 plot_frame.pack(pady=10, padx=20)
-plot_frame.pack_propagate(False)
+plot_frame.pack_propagate(False)                             # Prevent frame from resizing to fit content
 
-fig, ax = plt.subplots(figsize=(6, 4), dpi=100)
+fig, ax = plt.subplots(figsize=(6, 4), dpi=100)                 # dpi: dots per inch
+# coloring
 fig.patch.set_facecolor('#242424')
 ax.set_facecolor('#2b2b2b')
 ax.tick_params(colors='white')

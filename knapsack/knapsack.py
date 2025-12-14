@@ -30,13 +30,13 @@ class Knapsack:
         if self.problem_type == ProblemType.BOUNDED:
             self.max_quantities = np.where(self.weights > self.capacity, 0, 1) # Checks whether the weights are greater than the capacity and if they are set them to 0 otherwise 1
         else:
-            self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights])
+            self.max_quantities = np.array([self.calculate_maxitem(weight) for weight in self.weights]) # list comprehension
 
         self.belief_space = [np.zeros(self.num_of_items).astype(int), self.max_quantities.copy()]
 
     #Ahmed Mostafa
     def create_population(self): #Basically our Genotype (The way we encode the data that the algorithm handles) which is Integer in our case Phenotype always represents reality (Knapsack with actual physical items)
-        random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items)
+        random_percentages = np.random.rand(self.POP_SIZE, self.num_of_items) #Generates random numbers between 0 and 1 that will be used to scale the max quantities 
         #itemcounts is the random combination of items generated for use in the population
         itemcounts = random_percentages * (self.belief_space[Bounds.UPPER_BOUND.value] + 1) # Note to self, the +1 here is to alleviate the issue of not being able to reach the maximum value as .rand never generate a 1.0 limit is 0.99
         population = np.array(itemcounts).astype(int) #The acutal number of items we could have inside the sack
@@ -54,9 +54,9 @@ class Knapsack:
         return self.capacity // weight # // = floor
     
     def calculate_fitness(self, population):
-        total_weight = np.dot(population, self.weights)
-        total_value = np.dot(population, self.values)
-        fitness = np.where(total_weight <= self.capacity, total_value, 0)
+        total_weight = np.dot(population, self.weights) # total_weight is an array where each element is the total weight of the corresponding knapsack configuration in the population
+        total_value = np.dot(population, self.values) # total_value is an array where each element is the total value of the corresponding knapsack configuration in the population
+        fitness = np.where(total_weight <= self.capacity, total_value, 0) # array where each element is the fitness of the corresponding knapsack configuration in the population
         return fitness
     
     #Khaled
@@ -72,7 +72,8 @@ class Knapsack:
         top_performers = population[top_performers_index] # Will contain the best 20%
         # The following lines are to fix the issue that we discussed in the meeting about having items with fitness = 0 influence the belief space
         top_performers_values = fitness[top_performers_index]
-        valid_solutions = top_performers[top_performers_values > 0]
+        valid_solutions = top_performers[top_performers_values > 0] # ex:  [2   ,    0 ,    3]
+                                                                    #      [true, false, true] = [2, 3]
         # valid_solutions is a 2D array whose calculated fitness for each fitness is greater than 0
         if valid_solutions.size >= 2: # Always ensure at least two items for Crossover
             self.belief_space[Bounds.LOWER_BOUND.value] = np.min(valid_solutions, axis=0)
